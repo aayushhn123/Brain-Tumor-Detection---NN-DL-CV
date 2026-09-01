@@ -66,6 +66,8 @@ html, body, [class*="css"], .stApp {
 }
 * { letter-spacing: -0.011em; }
 
+html { scroll-behavior: smooth; }
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
@@ -82,7 +84,14 @@ footer { visibility: hidden; }
 /* ── Fade-in for main flow ── */
 .main .block-container { animation: fadeIn 0.5s ease both; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes growLine { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* stagger helper — apply progressively increasing delay to children of a flow */
+.stagger-1 { animation-delay: 0.05s !important; }
+.stagger-2 { animation-delay: 0.12s !important; }
+.stagger-3 { animation-delay: 0.20s !important; }
+.stagger-4 { animation-delay: 0.28s !important; }
 
 /* ══════════════ HERO ══════════════ */
 .hero { padding: 4.5rem 0 2.5rem; animation: fadeUp 0.6s ease both; }
@@ -111,11 +120,11 @@ footer { visibility: hidden; }
 .pill.warn { border-color: rgba(245,166,35,0.4); color: var(--amber); background: var(--amber-dim); }
 .pill.warn:hover { border-color: var(--amber); }
 
-/* ══════════════ SECTION LABELS ══════════════ */
+/* ══════════════ SECTION LABELS / STEP FLOW ══════════════ */
 .eyebrow-label {
     font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--text-faint);
-    margin: 3rem 0 0.6rem;
+    margin: 0 0 0.6rem;
 }
 .section-title {
     font-size: 1.55rem; font-weight: 700; letter-spacing: -0.02em;
@@ -126,6 +135,39 @@ footer { visibility: hidden; }
     max-width: 640px; margin-bottom: 1.5rem;
 }
 hr.divider { border: none; border-top: 1px solid var(--line-soft); margin: 3rem 0 0; }
+
+/* Step block: numbered marker + connecting thread down to the next step.
+   Content beneath a step header remains full-width Streamlit flow; the
+   marker + thread alone carry the "flow" signal between sections. */
+.step-block {
+    position: relative;
+    padding: 3.25rem 0 0.25rem 3.25rem;
+    animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
+}
+.step-block::before {
+    content: '';
+    position: absolute;
+    left: 1.05rem; top: -1.5rem; bottom: -1.5rem;
+    width: 1px;
+    background: var(--line);
+}
+.step-block:first-of-type::before { top: 3.25rem; }
+.step-marker {
+    position: absolute; left: 0; top: 3.25rem;
+    width: 2.15rem; height: 2.15rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1;
+}
+.step-block.active .step-marker,
+.step-block.done .step-marker {
+    border-color: var(--accent); color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-dim), var(--shadow-card);
+}
+.step-block.done .step-marker { background: var(--accent); color: #06231e; }
 
 /* ══════════════ CONTAINERS AS CARDS ══════════════ */
 div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -145,9 +187,13 @@ div[data-testid="stMetric"] {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 1.3rem 1.4rem;
     box-shadow: var(--shadow-card);
-    animation: fadeUp 0.45s ease both;
+    animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
+div[data-testid="stColumn"]:nth-of-type(1) div[data-testid="stMetric"] { animation-delay: 0.02s; }
+div[data-testid="stColumn"]:nth-of-type(2) div[data-testid="stMetric"] { animation-delay: 0.09s; }
+div[data-testid="stColumn"]:nth-of-type(3) div[data-testid="stMetric"] { animation-delay: 0.16s; }
+div[data-testid="stColumn"]:nth-of-type(4) div[data-testid="stMetric"] { animation-delay: 0.23s; }
 div[data-testid="stMetric"]:hover {
     border-color: var(--accent-line);
     box-shadow: var(--shadow-card-hover);
@@ -323,6 +369,7 @@ div[data-baseweb="slider"] {
     border: 1px solid var(--line) !important;
     box-shadow: var(--shadow-card) !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+    animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both !important;
 }
 [data-testid="stImage"] img:hover {
     border-color: var(--line-strong) !important;
@@ -743,6 +790,19 @@ PIPELINE_STEPS = [
 ]
 
 
+def step_header(number: str, eyebrow: str, title: str, sub: str | None = None, state: str = "active"):
+    """Render a numbered step marker with connecting thread above a section's content."""
+    sub_html = f'<div class="section-sub">{sub}</div>' if sub else ""
+    st.markdown(f"""
+<div class="step-block {state}">
+  <div class="step-marker">{number}</div>
+  <div class="eyebrow-label">{eyebrow}</div>
+  <div class="section-title">{title}</div>
+  {sub_html}
+</div>
+""", unsafe_allow_html=True)
+
+
 # ═════════════════════════════════════════════════════════════════════════
 #  HERO
 # ═════════════════════════════════════════════════════════════════════════
@@ -815,16 +875,14 @@ with st.sidebar:
 
 
 # ═════════════════════════════════════════════════════════════════════════
-#  UPLOAD
+#  UPLOAD — Step 01
 # ═════════════════════════════════════════════════════════════════════════
 
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
-st.markdown('<div class="eyebrow-label">Get started</div>', unsafe_allow_html=True)
-st.markdown('<div class="section-title">Upload your MRI scan</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="section-sub">A single 2D axial slice, PNG or JPEG — T1, T1-CE, T2, or FLAIR. '
-    'Not a scout localizer or sagittal/coronal view.</div>',
-    unsafe_allow_html=True,
+step_header(
+    "01", "Get started", "Upload your MRI scan",
+    "A single 2D axial slice, PNG or JPEG — T1, T1-CE, T2, or FLAIR. "
+    "Not a scout localizer or sagittal/coronal view.",
+    state="active",
 )
 
 uploaded_file = st.file_uploader(
@@ -836,19 +894,22 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
     raw_img = Image.open(uploaded_file).convert("RGB")
 
+    step_header("02", "Preview & configure", "Ready to analyze", state="done")
+
     prev_col, btn_col = st.columns([1, 2], vertical_alignment="center")
     with prev_col:
         st.image(raw_img, width=140)
     with btn_col:
-        st.write("")
+        st.caption(f"Sensitivity: **{sensitivity}** · adjust in the sidebar if needed")
         run = st.button("Run Analysis", type="primary", use_container_width=False)
 
     if run:
+        step_header("03", "Processing", "Running analysis pipeline", state="active")
         # ── Animated pipeline using native st.status ────────────────────
         with st.status("Running analysis pipeline…", expanded=True) as status:
             for step in PIPELINE_STEPS:
                 st.write(f"**{step['title']}** — {step['detail']}")
-                time.sleep(0.35)
+                time.sleep(0.3)
             status.update(label="Analysis complete", state="complete", expanded=False)
 
         # ── Run detection (unchanged engine) ─────────────────────────────
@@ -866,9 +927,7 @@ if uploaded_file:
             result_img  = draw_highlight(raw_img, bbox, tumor_mask)
             heatmap_arr = make_heatmap(gray_norm, brain_mask, tumor_mask)
 
-            st.markdown('<hr class="divider">', unsafe_allow_html=True)
-            st.markdown('<div class="eyebrow-label">Result</div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Detection result</div>', unsafe_allow_html=True)
+            step_header("04", "Result", "Detection result", state="done")
 
             b1, b2 = st.columns([1, 1], vertical_alignment="center")
             with b1:
@@ -888,8 +947,7 @@ if uploaded_file:
             )
 
             # ── Key measurements — native st.metric ──────────────────────
-            st.markdown('<div class="eyebrow-label">Measurements</div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Key measurements</div>', unsafe_allow_html=True)
+            step_header("05", "Measurements", "Key measurements", state="done")
 
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("Detection Confidence", f"{confidence*100:.1f}%")
@@ -902,8 +960,7 @@ if uploaded_file:
             )
 
             # ── Visual analysis — native tabs ─────────────────────────────
-            st.markdown('<div class="eyebrow-label">Imaging</div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Visual analysis</div>', unsafe_allow_html=True)
+            step_header("06", "Imaging", "Visual analysis", state="done")
 
             tab1, tab2, tab3 = st.tabs(["Detection Overlay", "Heatmap View", "Analysis Charts"])
 
@@ -950,8 +1007,7 @@ if uploaded_file:
 
             # ── Pipeline debug images ────────────────────────────────────
             if show_debug:
-                st.markdown('<div class="eyebrow-label">Debug</div>', unsafe_allow_html=True)
-                st.markdown('<div class="section-title">Pipeline intermediate images</div>', unsafe_allow_html=True)
+                step_header("07", "Debug", "Pipeline intermediate images", state="done")
                 d1, d2, d3 = st.columns(3)
                 d1.image((gray_norm * 255).astype(np.uint8), caption="① Normalized Grayscale", use_container_width=True)
                 d2.image(make_brain_mask_visual(brain_mask, gray_norm), caption="② Brain Mask", use_container_width=True)
@@ -960,8 +1016,7 @@ if uploaded_file:
                 d3.image(vis, caption="③ Raw Tumor Mask", use_container_width=True)
 
             # ── Full clinical report ─────────────────────────────────────
-            st.markdown('<div class="eyebrow-label">Report</div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Full clinical analysis report</div>', unsafe_allow_html=True)
+            step_header("08", "Report", "Full clinical analysis report", state="done")
             st.caption(f"NeuroScan v2.0 · Ensemble detection · Sensitivity: {sensitivity.upper()}")
 
             report_rows = [
@@ -991,8 +1046,9 @@ if uploaded_file:
                 st.markdown(rows_html, unsafe_allow_html=True)
 
             # ── Recommendation + disclaimer ──────────────────────────────
+            step_header("09", "Next steps", "Recommendation")
             _kind_map = {"HIGH": "error", "MODERATE": "warning", "LOW": "info"}
-            getattr(st, _kind_map.get(risk, "info"))(f"**Recommendation — {risk} risk**  \n{recommendation}")
+            getattr(st, _kind_map.get(risk, "info"))(f"**{risk} risk**  \n{recommendation}")
             st.warning(
                 "**Medical disclaimer:** This analysis uses classical image processing — it is not a trained "
                 "medical AI and has not been validated for clinical use. All findings must be reviewed by a "
@@ -1005,9 +1061,7 @@ if uploaded_file:
         #  RESULTS — NO DETECTION
         # ═════════════════════════════════════════════════════════════
         else:
-            st.markdown('<hr class="divider">', unsafe_allow_html=True)
-            st.markdown('<div class="eyebrow-label">Result</div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">Detection result</div>', unsafe_allow_html=True)
+            step_header("04", "Result", "Detection result", state="done")
 
             st.markdown(
                 '<span class="result-badge clear"><span class="dot"></span>No anomaly detected</span>',
