@@ -12,8 +12,7 @@ A web-based computer vision application built with Streamlit that analyzes MRI s
 
 | Resource | Link |
 |---|---|
-| 🌐 Live App | [Brain Tumor Detection Application](https://brain-tumor-detection-and-segmentation.streamlit.app/) |
-| 🎥 Demo Video | [Watch the Application in Action](https://drive.google.com/file/d/1iATU5dDvwC9CtSFtIlFGHJm8Re6aP2lu/view?usp=sharing) |
+| 🌐 Live App | [Brain Tumor Detection Application](https://brain-tumor-detection---nn-dl-cv.streamlit.app/) |
 | 🖼️ Sample MRI Images | [Google Drive Test Folder](https://drive.google.com/drive/folders/1IEpRBAXOwvFbiLAMAgaswJU8kkHgtvb5?usp=sharing) |
 
 ---
