@@ -33,72 +33,60 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* ── TOKENS ── */
+/* ── TOKENS — monochrome-first, accent used sparingly for meaning, not decoration ── */
 :root {
-    --g900: #0a1a0f;
-    --g800: #0d2116;
-    --g700: #112b1c;
-    --g600: #163522;
-    --g500: #1c4a2e;
-    --g400: #1f5c36;
-    --g300: #246b3e;
-    --accent: #22c55e;
-    --accent-dim: rgba(34,197,94,0.12);
-    --accent-glow: rgba(34,197,94,0.18);
-    --accent-border: rgba(34,197,94,0.35);
-    --accent-hover: #16a34a;
-    --surface: #0f1a14;
-    --surface-2: #141f18;
-    --surface-3: #192519;
-    --surface-4: #1e2c1e;
-    --border-subtle: rgba(34,197,94,0.10);
-    --border-mid:    rgba(34,197,94,0.20);
-    --border-strong: rgba(34,197,94,0.35);
-    --text-primary:  #f0fdf4;
-    --text-secondary:#86efac;
-    --text-muted:    #4ade80;
-    --text-dim:      rgba(134,239,172,0.55);
-    --white:         #ffffff;
-    --amber:         #f59e0b;
-    --amber-soft:    rgba(245,158,11,0.12);
-    --amber-border:  rgba(245,158,11,0.3);
-    --red:           #ef4444;
-    --red-soft:      rgba(239,68,68,0.12);
-    --red-border:    rgba(239,68,68,0.3);
-    --radius-sm:     6px;
-    --radius:        10px;
-    --radius-lg:     14px;
-    --radius-xl:     20px;
-    --shadow:        0 4px 24px rgba(0,0,0,0.5);
-    --shadow-soft:   0 1px 3px rgba(0,0,0,0.3);
-    --shadow-glow:   0 0 32px rgba(34,197,94,0.10);
-    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-    --duration-fast: 120ms;
-    --duration-base: 200ms;
+    --bg: #0b0f0d;
+    --surface-1: #121613;
+    --surface-2: #171c19;
+    --surface-3: #1c221e;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --accent: #34d399;
+    --accent-dim: rgba(52,211,153,0.10);
+    --accent-border: rgba(52,211,153,0.28);
+    --accent-hover: #2bbd8a;
+    --text-primary: rgba(255,255,255,0.94);
+    --text-secondary: rgba(255,255,255,0.62);
+    --text-tertiary: rgba(255,255,255,0.40);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.10);
+    --amber-border: rgba(245,158,11,0.26);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.10);
+    --red-border: rgba(248,113,113,0.26);
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-2: 0 8px 24px rgba(0,0,0,0.35);
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --fast: 110ms;
+    --base: 180ms;
 }
 
 /* ── BASE ── */
 html, body, [class*="css"], .stApp {
     font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
-    background-color: var(--surface) !important;
+    background-color: var(--bg) !important;
     color: var(--text-primary) !important;
     -webkit-font-smoothing: antialiased;
 }
+p, li, span, div { letter-spacing: 0; }
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--g400); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--g300); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-/* ── FOCUS VISIBILITY — accessible, consistent across all interactive elements ── */
+/* ── FOCUS VISIBILITY ── */
 :focus-visible {
     outline: 2px solid var(--accent) !important;
     outline-offset: 2px !important;
     border-radius: 4px;
 }
 
-/* ── REDUCED MOTION — gentle cross-fades, no springs/overshoot/parallax ── */
+/* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -109,96 +97,87 @@ html, body, [class*="css"], .stApp {
 }
 
 /* ════════════════════════════
-   HERO — full cinematic band
+   HERO — quiet, confident, no texture
    ════════════════════════════ */
 .ns-hero {
-    background: linear-gradient(180deg, var(--g800) 0%, var(--surface) 100%);
-    border-bottom: 1px solid var(--border-mid);
-    padding: 3rem 2rem 2.25rem;
-    margin: -0.5rem -1rem 2.25rem;
-    position: relative;
-    overflow: hidden;
-}
-.ns-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-        radial-gradient(ellipse 70% 120% at 5% 60%, rgba(34,197,94,0.06) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 80% at 95% 20%, rgba(34,197,94,0.035) 0%, transparent 55%);
-    pointer-events: none;
+    padding: 2.75rem 0 2rem;
+    margin: 0 0 1.5rem;
+    border-bottom: 1px solid var(--border);
 }
 .ns-hero-eyebrow {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 0.9rem;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-.ns-hero-eyebrow::before {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 1px;
+    color: var(--text-tertiary);
+    margin-bottom: 1rem;
 }
 .ns-hero-title {
     font-family: 'Inter', sans-serif;
-    font-size: clamp(2.5rem, 5.5vw, 4rem);
-    font-weight: 800;
+    font-size: clamp(2.1rem, 4vw, 2.75rem);
+    font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
-    margin: 0 0 0.9rem;
-    position: relative;
-    z-index: 1;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
 }
 .ns-hero-title .hi { color: var(--accent); }
 .ns-hero-desc {
-    font-size: 1.05rem;
+    font-size: 1rem;
     color: var(--text-secondary);
     line-height: 1.6;
     max-width: 560px;
     font-weight: 400;
-    letter-spacing: 0;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.3rem;
 }
 .ns-badge-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    position: relative;
-    z-index: 1;
+    gap: 0.4rem;
 }
 .ns-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.32rem 0.85rem;
-    border-radius: 100px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    border: 1px solid var(--border-mid);
-    background: rgba(25,37,25,0.6);
-    backdrop-filter: blur(12px);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
     color: var(--text-secondary);
-    transition: border-color var(--duration-fast) var(--ease-standard),
-                background var(--duration-fast) var(--ease-standard);
 }
 .ns-badge.warn {
     border-color: var(--amber-border);
-    background: var(--amber-soft);
+    background: var(--amber-dim);
     color: var(--amber);
+}
+
+/* ── LEGACY TOKEN ALIASES — keeps the rest of the stylesheet (unedited below)
+   pointed at the new, quieter palette without a full rewrite of every rule.
+   NOTE: --surface-1/2/3 are real tokens already declared above and must not
+   be reassigned here, or the depth hierarchy collapses to one flat color. ── */
+:root {
+    --surface: var(--bg);
+    --surface-4: var(--surface-3);
+    --border-subtle: var(--border);
+    --border-mid: var(--border);
+    --text-dim: var(--text-tertiary);
+    --accent-glow: var(--accent-dim);
+    --red-soft: var(--red-dim);
+    --amber-soft: var(--amber-dim);
+    --shadow: var(--shadow-2);
+    --shadow-soft: var(--shadow-1);
+    --shadow-glow: var(--accent-dim);
+    --duration-fast: var(--fast);
+    --duration-base: var(--base);
+    --ease-standard: var(--ease);
+    --g900: var(--bg);
+    --g800: var(--surface-1);
+    --g700: var(--surface-1);
+    --g600: var(--surface-2);
+    --g500: var(--surface-2);
+    --g400: var(--surface-3);
+    --g300: var(--border-strong);
 }
 
 /* ════════════════════════════
@@ -230,30 +209,28 @@ html, body, [class*="css"], .stApp {
    INFO CARDS — replaces every tooltip
    ════════════════════════════ */
 .ns-info {
-    background: var(--surface-3);
-    border: 1px solid var(--border-mid);
-    border-left: 3px solid var(--accent);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.1rem 1.35rem;
+    padding: 1.05rem 1.3rem;
     margin: 0.75rem 0 1.25rem;
-    font-size: 0.96rem;
+    font-size: 0.92rem;
     color: var(--text-secondary);
-    line-height: 1.7;
+    line-height: 1.65;
     letter-spacing: 0;
-    animation: fadeUp 0.25s var(--ease-standard) both;
 }
-.ns-info strong { color: var(--text-primary); font-weight: 700; }
-.ns-info em { color: var(--accent); font-style: normal; font-weight: 600; }
+.ns-info strong { color: var(--text-primary); font-weight: 600; }
+.ns-info em { color: var(--accent); font-style: normal; font-weight: 500; }
 .ns-info.amber {
-    border-left-color: var(--amber);
-    background: rgba(245,158,11,0.06);
-    color: rgba(253,230,138,0.85);
+    border-color: var(--amber-border);
+    background: var(--amber-dim);
+    color: rgba(253,230,138,0.8);
 }
 .ns-info.amber strong { color: var(--amber); }
 .ns-info.red {
-    border-left-color: var(--red);
-    background: var(--red-soft);
-    color: rgba(252,165,165,0.9);
+    border-color: var(--red-border);
+    background: var(--red-dim);
+    color: rgba(252,165,165,0.85);
 }
 .ns-info.red strong { color: var(--red); }
 
@@ -267,58 +244,43 @@ html, body, [class*="css"], .stApp {
     margin: 1.25rem 0;
 }
 .ns-metric {
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 1.4rem 1.5rem;
+    padding: 1.3rem 1.4rem;
     position: relative;
     overflow: hidden;
-    transition: border-color var(--duration-base) var(--ease-standard),
-                box-shadow var(--duration-base) var(--ease-standard);
-    animation: fadeUp 0.3s var(--ease-standard) both;
+    transition: border-color var(--base) var(--ease);
     cursor: default;
 }
 .ns-metric:hover {
     border-color: var(--border-strong);
-    box-shadow: var(--shadow-soft);
 }
-.ns-metric::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-    opacity: 0.7;
-}
-.ns-metric.amber::before { background: var(--amber); }
-.ns-metric.red::before   { background: var(--red); }
-.ns-metric.white::before { background: var(--text-secondary); }
 .ns-metric-label {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.72rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-    margin-bottom: 0.55rem;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 0.5rem;
 }
 .ns-metric-value {
     font-family: 'Inter', sans-serif !important;
-    font-size: 2.1rem;
-    font-weight: 800;
+    font-size: 1.9rem;
+    font-weight: 700;
     line-height: 1;
-    color: var(--accent);
-    margin-bottom: 0.6rem;
-    letter-spacing: -0.015em;
+    color: var(--text-primary);
+    margin-bottom: 0.55rem;
+    letter-spacing: -0.01em;
     font-variant-numeric: tabular-nums;
 }
 .ns-metric.amber .ns-metric-value { color: var(--amber); }
 .ns-metric.red   .ns-metric-value { color: var(--red); }
 .ns-metric.white .ns-metric-value { color: var(--text-primary); }
 .ns-metric-desc {
-    font-size: 0.88rem;
-    color: var(--text-dim);
-    line-height: 1.6;
-    letter-spacing: 0.005em;
+    font-size: 0.83rem;
+    color: var(--text-tertiary);
+    line-height: 1.55;
 }
 .ns-conf-track {
     height: 5px;
@@ -491,17 +453,16 @@ html, body, [class*="css"], .stApp {
    CLINICAL REPORT
    ════════════════════════════ */
 .ns-report {
-    background: var(--surface-2);
-    border: 1px solid var(--border-mid);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     overflow: hidden;
     margin-top: 1.5rem;
-    box-shadow: var(--shadow-soft);
 }
 .ns-report-header {
-    background: var(--g500);
-    border-bottom: 1px solid var(--accent-border);
-    padding: 1.1rem 1.6rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -510,28 +471,28 @@ html, body, [class*="css"], .stApp {
 }
 .ns-report-title {
     font-family: 'Inter', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.005em;
 }
 .ns-report-meta {
-    font-size: 0.8rem;
-    color: rgba(240,253,244,0.75);
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    font-weight: 450;
+    letter-spacing: 0.01em;
 }
 .ns-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.95rem 1.6rem;
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid var(--border);
     gap: 2rem;
     flex-wrap: wrap;
-    transition: background var(--duration-fast) var(--ease-standard);
+    transition: background var(--fast) var(--ease);
 }
-.ns-row:hover { background: rgba(34,197,94,0.04); }
+.ns-row:hover { background: var(--surface-2); }
 .ns-row:last-child { border-bottom: none; }
 .ns-row-key {
     font-size: 0.95rem;
@@ -559,101 +520,84 @@ html, body, [class*="css"], .stApp {
    SIDEBAR
    ════════════════════════════ */
 section[data-testid="stSidebar"] {
-    background: var(--g900) !important;
-    border-right: 1px solid var(--border-subtle) !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+    background: var(--bg) !important;
+    border-right: 1px solid var(--border) !important;
 }
 section[data-testid="stSidebar"] * {
     color: var(--text-primary) !important;
 }
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] p {
-    font-size: 0.93rem !important;
+    font-size: 0.88rem !important;
     font-family: 'DM Sans', sans-serif !important;
     letter-spacing: 0 !important;
 }
 .sb-logo {
     font-family: 'Inter', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 800;
+    font-size: 1.15rem;
+    font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.015em;
-    padding: 1rem 0 0.25rem;
+    letter-spacing: -0.01em;
+    padding: 0.25rem 0 0.9rem;
 }
 .sb-logo span { color: var(--accent); }
 .sb-rule {
     height: 1px;
-    background: linear-gradient(90deg, var(--accent-border), transparent);
-    margin: 0.5rem 0 1.25rem;
+    background: var(--border);
+    margin: 0 0 1.4rem;
 }
 .sb-heading {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--text-dim);
-    margin: 1.5rem 0 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.sb-heading::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-subtle);
+    color: var(--text-tertiary);
+    margin: 1.75rem 0 0.75rem;
 }
 .sb-mode-card {
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius);
-    padding: 0.95rem 1.05rem;
-    margin: 0.5rem 0 1rem;
-    transition: border-color var(--duration-base) var(--ease-standard);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.8rem 0.9rem;
+    margin: 0.6rem 0 0.5rem;
 }
 .sb-mode-title {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
 }
 .sb-mode-body {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
-    line-height: 1.55;
+    line-height: 1.5;
 }
 .sb-algo-step {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 0.9rem;
-    align-items: flex-start;
+    gap: 0.7rem;
+    margin-bottom: 0.75rem;
+    align-items: baseline;
 }
 .sb-num {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--accent);
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: 4px;
-    padding: 0.1rem 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
     flex-shrink: 0;
-    margin-top: 2px;
-    min-width: 26px;
-    text-align: center;
+    min-width: 16px;
     font-variant-numeric: tabular-nums;
 }
-.sb-algo-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.15rem; }
-.sb-algo-body  { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+.sb-algo-title { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.1rem; }
+.sb-algo-body  { font-size: 0.78rem; color: var(--text-tertiary); line-height: 1.45; }
 .sb-option-card {
-    background: var(--surface-3);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    padding: 0.8rem 0.95rem;
-    margin: 0.4rem 0 0.5rem;
-    font-size: 0.85rem;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    margin: 0.4rem 0 0.4rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
-    line-height: 1.55;
-    animation: fadeUp 0.2s var(--ease-standard) both;
+    line-height: 1.5;
 }
 
 /* ════════════════════════════
@@ -665,20 +609,18 @@ section[data-testid="stSidebar"] p {
     border: none !important;
     border-radius: var(--radius) !important;
     color: #052e10 !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     font-family: 'DM Sans', sans-serif !important;
-    font-size: 1rem !important;
-    letter-spacing: 0.01em !important;
-    padding: 0.8rem 2.8rem !important;
-    min-width: 220px !important;
-    transition: background var(--duration-fast) var(--ease-standard),
-                box-shadow var(--duration-fast) var(--ease-standard),
-                transform var(--duration-fast) var(--ease-standard) !important;
-    box-shadow: 0 2px 12px var(--accent-glow) !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0 !important;
+    padding: 0.7rem 2.4rem !important;
+    min-width: 200px !important;
+    transition: background var(--fast) var(--ease),
+                transform var(--fast) var(--ease) !important;
+    box-shadow: none !important;
 }
 .stButton > button:hover {
     background: var(--accent-hover) !important;
-    box-shadow: 0 4px 18px var(--accent-glow) !important;
 }
 /* Feedback fires on press, not on release — instant, not animated */
 .stButton > button:active {
@@ -693,19 +635,19 @@ section[data-testid="stSidebar"] p {
    FILE UPLOADER
    ════════════════════════════ */
 [data-testid="stFileUploader"] {
-    background: var(--surface-3) !important;
-    border: 2px dashed var(--border-mid) !important;
+    background: var(--surface-1) !important;
+    border: 1px dashed var(--border-strong) !important;
     border-radius: var(--radius-lg) !important;
-    transition: border-color var(--duration-base) var(--ease-standard),
-                background var(--duration-base) var(--ease-standard);
+    transition: border-color var(--base) var(--ease),
+                background var(--base) var(--ease);
 }
 [data-testid="stFileUploader"]:hover {
     border-color: var(--accent-border) !important;
     background: var(--accent-dim) !important;
 }
-[data-testid="stFileUploader"] label { font-size: 0.97rem !important; font-weight: 600 !important; }
+[data-testid="stFileUploader"] label { font-size: 0.9rem !important; font-weight: 500 !important; }
 [data-testid="stFileUploader"] section > button {
-    transition: transform var(--duration-fast) var(--ease-standard) !important;
+    transition: transform var(--fast) var(--ease) !important;
 }
 [data-testid="stFileUploader"] section > button:active {
     transform: scale(0.97) !important;
@@ -714,22 +656,51 @@ section[data-testid="stSidebar"] p {
 /* ════════════════════════════
    SLIDER
    ════════════════════════════ */
-.stSlider > div > div > div { background: var(--border-mid) !important; }
+.stSlider > div > div > div { background: var(--border) !important; }
 .stSlider > div > div > div > div { background: var(--accent) !important; }
-.stSlider label { font-size: 0.95rem !important; font-weight: 600 !important; color: var(--text-primary) !important; }
+.stSlider label { font-size: 0.9rem !important; font-weight: 600 !important; color: var(--text-primary) !important; }
 .stSlider [role="slider"] {
-    transition: box-shadow var(--duration-fast) var(--ease-standard) !important;
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+    transition: box-shadow var(--fast) var(--ease) !important;
 }
 .stSlider [role="slider"]:focus-visible {
     box-shadow: 0 0 0 6px var(--accent-dim) !important;
 }
+/* select_slider value pill (e.g. "balanced") */
+.stSlider [data-testid="stTickBarMin"],
+.stSlider [data-testid="stTickBarMax"] {
+    color: var(--text-tertiary) !important;
+    font-size: 0.72rem !important;
+}
+div[data-baseweb="tag"] {
+    background: var(--accent-dim) !important;
+    border: 1px solid var(--accent-border) !important;
+    color: var(--accent) !important;
+    border-radius: 6px !important;
+}
+div[data-baseweb="tag"] span { color: var(--accent) !important; }
 
 /* ════════════════════════════
-   CHECKBOX
+   CHECKBOX — override Streamlit's default theme-red tick entirely
    ════════════════════════════ */
-.stCheckbox label span:last-child { font-size: 0.95rem !important; font-weight: 500 !important; }
-.stCheckbox label { transition: opacity var(--duration-fast) var(--ease-standard); }
+.stCheckbox label span:last-child { font-size: 0.9rem !important; font-weight: 450 !important; color: var(--text-secondary) !important; }
+.stCheckbox label { transition: opacity var(--fast) var(--ease); gap: 0.6rem !important; }
 .stCheckbox label:hover { opacity: 0.85; }
+.stCheckbox [data-testid="stCheckbox"] > label > span:first-child,
+.stCheckbox label > span[data-baseweb="checkbox"] > span {
+    background-color: transparent !important;
+    border-color: var(--border-strong) !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+}
+.stCheckbox input:checked ~ span,
+.stCheckbox label > span[data-baseweb="checkbox"]:has(input:checked) > span {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+.stCheckbox svg { color: var(--bg) !important; fill: var(--bg) !important; }
 
 /* ════════════════════════════
    UPLOAD HINT
