@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import io
 import time
+import base64
+from datetime import datetime
 
 st.set_page_config(
     page_title="NeuroScan · AI MRI Analysis",
@@ -68,9 +70,20 @@ html, body, [class*="css"], .stApp {
 
 html { scroll-behavior: smooth; }
 
+/* sensible default motion for anything not explicitly overridden below */
+button, [role="slider"], [data-baseweb="tab"], summary,
+div[data-testid="stMetric"], div[data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stImage"] img, .pill, input, textarea {
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; transition: background 0.2s ease; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
 
 .block-container {
     padding-top: 0 !important;
@@ -86,6 +99,16 @@ footer { visibility: hidden; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes growLine { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 var(--accent-dim); }
+    70%  { box-shadow: 0 0 0 8px rgba(45,212,191,0); }
+    100% { box-shadow: 0 0 0 0 rgba(45,212,191,0); }
+}
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@keyframes spinSoft { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* stagger helper — apply progressively increasing delay to children of a flow */
 .stagger-1 { animation-delay: 0.05s !important; }
@@ -94,7 +117,7 @@ footer { visibility: hidden; }
 .stagger-4 { animation-delay: 0.28s !important; }
 
 /* ══════════════ HERO ══════════════ */
-.hero { padding: 4.5rem 0 2.5rem; animation: fadeUp 0.6s ease both; }
+.hero { padding: 4.5rem 0 2.5rem; animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
 .hero-eyebrow {
     font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--text-faint); margin-bottom: 1.1rem;
@@ -159,14 +182,16 @@ hr.divider { border: none; border-top: 1px solid var(--line-soft); margin: 3rem 
     background: var(--surface); border: 1px solid var(--line-strong);
     font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
     box-shadow: var(--shadow-card);
-    transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
     z-index: 1;
 }
+.step-block:hover .step-marker { transform: scale(1.08); }
 .step-block.active .step-marker,
 .step-block.done .step-marker {
     border-color: var(--accent); color: var(--accent);
     box-shadow: 0 0 0 4px var(--accent-dim), var(--shadow-card);
 }
+.step-block.active .step-marker { animation: pulseRing 2s ease-out infinite; }
 .step-block.done .step-marker { background: var(--accent); color: #06231e; }
 
 /* ══════════════ CONTAINERS AS CARDS ══════════════ */
@@ -218,17 +243,21 @@ div[data-testid="stMetricDelta"] { font-size: 0.85rem !important; }
     font-size: 0.95rem !important; font-weight: 500 !important;
     color: var(--text-faint) !important; padding: 0.7rem 0.2rem !important;
     background: transparent !important; border-bottom: 2px solid transparent !important;
-    transition: color 0.15s ease, border-color 0.15s ease !important;
+    transition: color 0.18s ease, border-color 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.15s ease !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: var(--text-dim) !important;
+    transform: translateY(-1px) !important;
 }
 .stTabs [aria-selected="true"] {
     color: var(--text) !important; border-bottom: 2px solid var(--accent) !important;
     font-weight: 600 !important;
 }
-.stTabs [aria-selected="true"]:hover { color: var(--text) !important; }
-.stTabs [data-baseweb="tab-panel"] { padding-top: 1.75rem !important; }
+.stTabs [aria-selected="true"]:hover { color: var(--text) !important; transform: none !important; }
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 1.75rem !important;
+    animation: fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
+}
 
 /* ══════════════ EXPANDER ══════════════ */
 div[data-testid="stExpander"] {
@@ -279,26 +308,43 @@ section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover {
 }
 
 /* ══════════════ BUTTONS ══════════════ */
-.stButton > button {
+.stButton > button, .stDownloadButton > button {
     background: var(--text) !important; color: #000 !important; border: 1px solid var(--text) !important;
     border-radius: 100px !important; font-weight: 600 !important; font-size: 0.95rem !important;
     padding: 0.65rem 1.9rem !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.35) !important;
-    transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
+    transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease, background 0.2s ease !important;
+    position: relative !important; overflow: hidden !important;
 }
-.stButton > button:hover {
-    opacity: 0.85 !important; transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.45) !important;
+.stButton > button:hover, .stDownloadButton > button:hover {
+    transform: translateY(-2px) scale(1.015) !important;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06) !important;
 }
-.stButton > button:active { transform: translateY(0) !important; opacity: 0.7 !important; }
+.stButton > button:active, .stDownloadButton > button:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+    transition-duration: 0.05s !important;
+}
+.stButton > button:focus-visible, .stDownloadButton > button:focus-visible {
+    outline: 2px solid var(--accent) !important; outline-offset: 2px !important;
+}
 .stButton > button[kind="secondary"] {
     background: transparent !important; color: var(--text) !important;
     border: 1px solid var(--line-strong) !important; box-shadow: none !important;
 }
 .stButton > button[kind="secondary"]:hover {
     background: var(--surface-hover) !important; border-color: var(--accent) !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important;
+}
+.stDownloadButton > button {
+    background: var(--accent) !important; border-color: var(--accent) !important; color: #06231e !important;
+}
+.stDownloadButton > button:hover {
+    background: #5eead4 !important; border-color: #5eead4 !important;
 }
 div[data-testid="stCheckbox"] label:hover span:first-child { border-color: var(--accent) !important; }
+div[data-testid="stCheckbox"] span:first-child { transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease !important; }
+div[data-testid="stCheckbox"] label:active span:first-child { transform: scale(0.9) !important; }
 
 /* ══════════════ FILE UPLOADER ══════════════ */
 [data-testid="stFileUploaderDropzone"] {
@@ -364,40 +410,52 @@ div[data-baseweb="slider"] {
 }
 
 /* ══════════════ IMAGES ══════════════ */
+[data-testid="stImage"] {
+    overflow: hidden !important;
+    border-radius: var(--radius) !important;
+}
 [data-testid="stImage"] img {
     border-radius: var(--radius) !important;
     border: 1px solid var(--line) !important;
     box-shadow: var(--shadow-card) !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1) !important;
     animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both !important;
+    cursor: zoom-in !important;
 }
 [data-testid="stImage"] img:hover {
-    border-color: var(--line-strong) !important;
+    border-color: var(--accent-line) !important;
     box-shadow: var(--shadow-card-hover) !important;
-    transform: translateY(-2px) !important;
+    transform: scale(1.035) !important;
 }
 [data-testid="stImageCaption"] {
     font-size: 0.8rem !important; color: var(--text-faint) !important;
     text-transform: uppercase !important; letter-spacing: 0.06em !important;
     font-weight: 600 !important; text-align: center !important;
     margin-top: 0.6rem !important;
+    transition: color 0.2s ease !important;
 }
 
 /* ══════════════ RESULT BADGE (small, restrained) ══════════════ */
 .result-badge {
     display: inline-flex; align-items: center; gap: 0.55rem;
     padding: 0.55rem 1.1rem; border-radius: 100px; font-size: 0.92rem;
-    font-weight: 600; animation: fadeUp 0.4s ease both;
+    font-weight: 600; animation: fadeUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
     box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.result-badge:hover { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
 .result-badge.found { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,107,107,0.35); }
 .result-badge.clear { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(45,212,191,0.35); }
-.result-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.result-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pdotPulse 1.6s ease infinite; }
+@keyframes pdotPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
 .risk-pill {
     display: inline-flex; align-items: center; padding: 0.5rem 1rem; border-radius: 100px;
     font-size: 0.85rem; font-weight: 700; letter-spacing: 0.03em;
     box-shadow: var(--shadow-card);
+    animation: fadeUp 0.45s 0.08s cubic-bezier(0.34,1.56,0.64,1) both;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.risk-pill:hover { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
 .risk-pill.high   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,107,107,0.35); }
 .risk-pill.medium { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.35); }
 .risk-pill.low    { background: var(--accent-dim);color: var(--accent);border: 1px solid rgba(45,212,191,0.35); }
@@ -804,6 +862,172 @@ def step_header(number: str, eyebrow: str, title: str, sub: str | None = None, s
 
 
 # ═════════════════════════════════════════════════════════════════════════
+#  EXPORT — self-contained HTML report (printable to PDF from any browser)
+# ═════════════════════════════════════════════════════════════════════════
+
+def _img_to_b64(img_array_or_pil) -> str:
+    if isinstance(img_array_or_pil, np.ndarray):
+        pil = Image.fromarray(img_array_or_pil.astype(np.uint8))
+    else:
+        pil = img_array_or_pil
+    buf = io.BytesIO()
+    pil.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def build_html_report(
+    *, detected: bool, sensitivity: str,
+    raw_img, result_img=None, heatmap_arr=None, brain_mask_vis=None,
+    risk=None, risk_cls=None, confidence=None, area_pct=None, diag=None,
+    bbox=None, tumor_mask=None, brain_mask=None, recommendation=None,
+    report_rows=None,
+) -> str:
+    ts = datetime.now().strftime("%B %d, %Y · %H:%M")
+    raw_b64 = _img_to_b64(raw_img)
+
+    if detected:
+        badge_html = '<span class="badge found">● Anomaly Detected</span>'
+        risk_html = f'<span class="risk-chip {risk_cls}">{risk} RISK</span>'
+        result_b64 = _img_to_b64(result_img)
+        heat_b64 = _img_to_b64(heatmap_arr)
+        mask_b64 = _img_to_b64(brain_mask_vis)
+        images_html = f"""
+        <div class="img-grid">
+          <figure><img src="data:image/png;base64,{raw_b64}"><figcaption>Original MRI Scan</figcaption></figure>
+          <figure><img src="data:image/png;base64,{result_b64}"><figcaption>Anomaly Highlighted</figcaption></figure>
+          <figure><img src="data:image/png;base64,{heat_b64}"><figcaption>Intensity Heatmap</figcaption></figure>
+          <figure><img src="data:image/png;base64,{mask_b64}"><figcaption>Brain Mask</figcaption></figure>
+        </div>"""
+        metrics_html = f"""
+        <div class="metric-grid">
+          <div class="metric"><div class="metric-label">Detection Confidence</div><div class="metric-value">{confidence*100:.1f}%</div></div>
+          <div class="metric"><div class="metric-label">Brain Coverage</div><div class="metric-value">{area_pct:.2f}%</div></div>
+          <div class="metric"><div class="metric-label">Brightness Contrast</div><div class="metric-value">{diag['contrast']:.2f}σ</div></div>
+          <div class="metric"><div class="metric-label">Region Roundness</div><div class="metric-value">{diag['circularity']:.2f}</div></div>
+        </div>"""
+        rows_html = "".join(
+            f'<tr><td class="k">{k}<div class="e">{e}</div></td><td class="v">{v}</td></tr>'
+            for k, e, v in report_rows
+        )
+        report_table = f"""
+        <h2>Full Clinical Analysis Report</h2>
+        <table class="report-table"><tbody>{rows_html}</tbody></table>"""
+        recommendation_html = f"""
+        <div class="callout {risk_cls}">
+          <strong>Recommendation — {risk} risk</strong><p>{recommendation}</p>
+        </div>"""
+    else:
+        badge_html = '<span class="badge clear">● No Anomaly Detected</span>'
+        risk_html = ""
+        images_html = f"""
+        <div class="img-grid">
+          <figure><img src="data:image/png;base64,{raw_b64}"><figcaption>Uploaded MRI Scan</figcaption></figure>
+          <figure><img src="data:image/png;base64,{_img_to_b64(heatmap_arr)}"><figcaption>Brain Region Identified</figcaption></figure>
+        </div>"""
+        metrics_html = ""
+        report_table = ""
+        recommendation_html = """
+        <div class="callout low">
+          <strong>What this means</strong>
+          <p>At the current sensitivity, no region was flagged as statistically unusual. This does not
+          guarantee the scan is clear — subtle or diffuse lesions may not be detectable. Consider re-running
+          at a higher sensitivity if a lesion is suspected.</p>
+        </div>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NeuroScan Report — {ts}</title>
+<style>
+  @media print {{
+    @page {{ margin: 18mm 14mm; }}
+    body {{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
+  }}
+  * {{ box-sizing: border-box; }}
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', Helvetica, Arial, sans-serif;
+    background: #ffffff; color: #111114; margin: 0; padding: 2.5rem 3rem;
+    line-height: 1.55; max-width: 900px; margin: 0 auto;
+  }}
+  .masthead {{
+    display: flex; justify-content: space-between; align-items: flex-start;
+    border-bottom: 2px solid #111114; padding-bottom: 1.25rem; margin-bottom: 1.75rem;
+  }}
+  .logo {{ font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }}
+  .logo span {{ color: #0d9488; }}
+  .meta {{ text-align: right; font-size: 0.82rem; color: #555; }}
+  h2 {{ font-size: 1.05rem; font-weight: 700; margin: 2.25rem 0 0.9rem; letter-spacing: -0.01em; }}
+  .badge {{
+    display: inline-block; padding: 0.4rem 0.9rem; border-radius: 100px;
+    font-weight: 700; font-size: 0.85rem; margin-right: 0.6rem;
+  }}
+  .badge.found {{ background: #fde2e2; color: #b91c1c; }}
+  .badge.clear {{ background: #d7f7ef; color: #0d9488; }}
+  .risk-chip {{
+    display: inline-block; padding: 0.4rem 0.9rem; border-radius: 100px;
+    font-weight: 700; font-size: 0.8rem; letter-spacing: 0.03em;
+  }}
+  .risk-chip.high {{ background: #fde2e2; color: #b91c1c; }}
+  .risk-chip.medium {{ background: #fef1d7; color: #b45309; }}
+  .risk-chip.low {{ background: #d7f7ef; color: #0d9488; }}
+  .img-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0; }}
+  .img-grid figure {{ margin: 0; }}
+  .img-grid img {{ width: 100%; border-radius: 8px; border: 1px solid #ddd; display: block; }}
+  .img-grid figcaption {{
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #777; margin-top: 0.4rem; text-align: center; font-weight: 600;
+  }}
+  .metric-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 1rem 0; }}
+  .metric {{ border: 1px solid #ddd; border-radius: 8px; padding: 0.9rem 1rem; }}
+  .metric-label {{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #777; font-weight: 700; margin-bottom: 0.3rem; }}
+  .metric-value {{ font-size: 1.4rem; font-weight: 800; }}
+  table.report-table {{ width: 100%; border-collapse: collapse; font-size: 0.86rem; }}
+  table.report-table td {{ padding: 0.7rem 0.5rem; border-bottom: 1px solid #eee; vertical-align: top; }}
+  table.report-table td.k {{ font-weight: 700; width: 40%; }}
+  table.report-table td.e {{ font-weight: 400; color: #777; font-size: 0.78rem; margin-top: 0.15rem; }}
+  table.report-table td.v {{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+  .callout {{ border-left: 4px solid #0d9488; background: #f0fdfa; border-radius: 6px; padding: 1rem 1.25rem; margin: 1rem 0; }}
+  .callout.high {{ border-color: #dc2626; background: #fef2f2; }}
+  .callout.medium {{ border-color: #d97706; background: #fffbeb; }}
+  .callout p {{ margin: 0.4rem 0 0; font-size: 0.9rem; }}
+  .disclaimer {{
+    margin-top: 2rem; padding: 1rem 1.25rem; border: 1px solid #f0c36d;
+    background: #fffbeb; border-radius: 8px; font-size: 0.82rem; color: #7c4a03;
+  }}
+  .footer {{ margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.72rem; color: #999; text-align: center; }}
+</style>
+</head>
+<body>
+  <div class="masthead">
+    <div class="logo">Neuro<span>Scan</span></div>
+    <div class="meta">Clinical Analysis Report<br>{ts}<br>Sensitivity: {sensitivity.upper()}</div>
+  </div>
+
+  <div>{badge_html}{risk_html}</div>
+
+  <h2>Imaging</h2>
+  {images_html}
+
+  {f'<h2>Key Measurements</h2>{metrics_html}' if metrics_html else ''}
+
+  {report_table}
+
+  {recommendation_html}
+
+  <div class="disclaimer">
+    <strong>⚠ Medical Disclaimer</strong> — This analysis uses classical image processing. It is not a
+    trained medical AI and has not been validated for clinical use. All findings must be reviewed by a
+    qualified radiologist or neurologist before any medical decisions are made. This tool must never
+    replace professional medical evaluation.
+  </div>
+
+  <div class="footer">NeuroScan v2.0 · Research Prototype · Generated {ts} · Not for clinical use</div>
+</body>
+</html>"""
+
+
+# ═════════════════════════════════════════════════════════════════════════
 #  HERO
 # ═════════════════════════════════════════════════════════════════════════
 
@@ -1057,6 +1281,33 @@ if uploaded_file:
                 icon="⚠️",
             )
 
+            # ── Export ─────────────────────────────────────────────────
+            step_header(
+                "10", "Export", "Download your report",
+                "A self-contained HTML file with every image, measurement, and finding. "
+                "Open it in any browser and use Print → Save as PDF for a PDF copy.",
+            )
+            html_report = build_html_report(
+                detected=True, sensitivity=sensitivity, raw_img=raw_img,
+                result_img=result_img, heatmap_arr=heatmap_arr,
+                brain_mask_vis=make_brain_mask_visual(brain_mask, gray_norm),
+                risk=risk, risk_cls=risk_cls, confidence=confidence, area_pct=area_pct,
+                diag=diag, bbox=bbox, tumor_mask=tumor_mask, brain_mask=brain_mask,
+                recommendation=recommendation, report_rows=report_rows,
+            )
+            e1, e2 = st.columns([1, 1])
+            with e1:
+                st.download_button(
+                    "Download Report (HTML)",
+                    data=html_report,
+                    file_name=f"neuroscan_report_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                    mime="text/html",
+                    type="primary",
+                    use_container_width=True,
+                )
+            with e2:
+                st.caption("Tip: open the downloaded file and press ⌘/Ctrl + P, then choose **Save as PDF** for a print-ready PDF.")
+
         # ═════════════════════════════════════════════════════════════
         #  RESULTS — NO DETECTION
         # ═════════════════════════════════════════════════════════════
@@ -1079,3 +1330,24 @@ if uploaded_file:
             c1, c2 = st.columns(2)
             c1.image(raw_img, caption="Uploaded MRI Scan", use_container_width=True)
             c2.image(make_heatmap(gray_norm, brain_mask, None), caption="Brain Region Identified", use_container_width=True)
+
+            step_header(
+                "05", "Export", "Download your report",
+                "A self-contained HTML file you can open in any browser or print to PDF.",
+            )
+            html_report = build_html_report(
+                detected=False, sensitivity=sensitivity, raw_img=raw_img,
+                heatmap_arr=make_heatmap(gray_norm, brain_mask, None),
+            )
+            e1, e2 = st.columns([1, 1])
+            with e1:
+                st.download_button(
+                    "Download Report (HTML)",
+                    data=html_report,
+                    file_name=f"neuroscan_report_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                    mime="text/html",
+                    type="primary",
+                    use_container_width=True,
+                )
+            with e2:
+                st.caption("Tip: open the downloaded file and press ⌘/Ctrl + P, then choose **Save as PDF**.")
