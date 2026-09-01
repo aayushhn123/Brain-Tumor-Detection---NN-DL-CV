@@ -1,0 +1,7 @@
+streamlit
+Pillow
+numpy
+scipy
+huggingface_hub
+matplotlib
+scikit-image
